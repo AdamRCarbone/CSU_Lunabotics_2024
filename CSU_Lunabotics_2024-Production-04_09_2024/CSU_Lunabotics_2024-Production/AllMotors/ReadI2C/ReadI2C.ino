@@ -1,43 +1,24 @@
 /*
 UPDATED CODE TO RUN STEPPER MOTORS ALONG WITH LINEAR ACTUATOR ****NOT TESTED****
 */
-
 #include <SPI.h>
 #include <Wire.h>
 #include "CSULunaboticsActuator.h"
 #include "CSULunaboticsStepper.h"
+#include "CSULunaboticsSwitch.h"
 
 long currTime;
 
-/*struct stepperMotor
-{
-  //pin that connects to the PUL + part of the stepper controller
-  int pulsePin;
-
-  //pin that connects to the DIR + part of the stepper controller 
-  int directionPin;
-
-  //time between half-steps of the motor, see the function definition of halfPulse
-  int pulseDuration;
-
-  //holds the direction of the motor, HIGH is one way, LOW is the other
-  bool direction;
-
-  //Stores the time of the most recent half step
-  long lastStep;
-
-  //Holds the state of the last step, since one "half step" turns it on then the next "half step" turns it off
-  int stepState;
-};*/
-
 stepperMotor rightMotor, leftMotor;
 linearActuator actuator;
+two_pos_switch diggingMotor;
 
 void setup() {
 
   initialize_stepper (&rightMotor, /*pulse pin*/ 3, /*direction pin*/ 4);
-  initialize_stepper (&leftMotor, /*pulse pin*/ 9, /*direction pin*/ 8);
-  initialize_actuator (&actuator, /*extend pin*/ 12, /*retract pin*/ 11);
+  initialize_stepper (&leftMotor, /*pulse pin*/ 5, /*direction pin*/ 6);
+  initialize_actuator (&actuator, /*extend pin*/ 7, /*retract pin*/ 8);
+  initialize_switch (&diggingMotor, 9);
   
   Serial.begin(9600);
 
@@ -63,7 +44,7 @@ void receiveEvent(int howMany)
   char rightSpeed[3];
   char leftSpeed[3];
   char triState;
-  char diggingMotor;
+  char digState;
   
   rightSpeed[0] = buffer[0];
   rightSpeed[1] = buffer[1];
@@ -72,10 +53,17 @@ void receiveEvent(int howMany)
   leftSpeed[1] = buffer[3];
   leftSpeed[2] = '\0';
   triState = buffer[4] - '0';
-  diggingMotor = buffer[5];
+  digState = buffer[5] - '0';
   set_motor_speed (&rightMotor, atoi (rightSpeed) - 50);
   set_motor_speed (&leftMotor, atoi (leftSpeed) - 50);
 
   set_actuator_state (&actuator, int (triState));
+
+  if (digState)
+    set_state (&diggingMotor, true);
+  else
+    set_state (&diggingMotor, false);
+
   actuate (&actuator);
+  do_on_off (&diggingMotor);
 }

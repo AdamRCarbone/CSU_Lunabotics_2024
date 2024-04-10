@@ -5,11 +5,11 @@ pygame.init()
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 UDP_IP = "192.168.0.101"
-UDP_PORT = 3000 
+UDP_PORT = 2000 
 
 
 def remap(x):
-   x = int((-49*x)+50)
+   x = int((-39*x)+50)
    if x < 10:
        return "0" + str(x)
    if 45 <= x & 55 >= x:
